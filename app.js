@@ -3,7 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 // const _ = require("lodash");
-// const mongoose = require("mongoose");
+const mongoose = require("mongoose");
 
 const app = express();
 
@@ -15,12 +15,63 @@ app.use(bodyParser.urlencoded({
 
 app.use(express.static("public"));
 
+mongoose.connect("mongodb://localhost:27017/userDB", {
+  useNewUrlParser: true
+});
+
+const userSchema = new mongoose.Schema({
+  email: String,
+  password: String
+});
+
+const User = new mongoose.model("User", userSchema);
+
+// Routing
+app.get("/", function(req, res){
+  res.render("home");
+});
+
+app.get("/login", function(req, res){
+  res.render("login");
+});
+
+app.get("/register", function(req, res){
+  res.render("register");
+});
+
+app.post("/register", function(req, res){
+  const user = new User({
+    email: req.body.username,
+    password: req.body.password
+  });
+  user.save(function(err){
+    if (!err) {
+      res.render("secrets");
+    } else {
+      console.log(err);
+    }
+  });
+});
 
 
-
-
-
-
+app.post("/login", function(req, res){
+  const username = req.body.username;
+  const password = req.body.password;
+  User.findOne(
+    {mail: username},
+    function(err, findUser){
+      if (!err){
+        if (findUser) {
+          if (findUser.password===password) {
+            res.render("Secrets");
+          } else {
+            res.send("Usuario o Password erroneo");
+          }
+        }
+      }
+    }
+  )
+});
 
 //Arrancar Servidor
 
