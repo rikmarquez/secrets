@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const ejs = require("ejs");
 // const _ = require("lodash");
 const mongoose = require("mongoose");
+const encrypt = require("mongoose-encryption");
 
 const app = express();
 
@@ -23,6 +24,10 @@ const userSchema = new mongoose.Schema({
   email: String,
   password: String
 });
+
+// Setup Encriptacion en mongoose-encryption
+const secret = "estesmylittlesecretqueseguronosabes";
+userSchema.plugin(encrypt, { secret: secret, encryptedFields: ["password"] });
 
 const User = new mongoose.model("User", userSchema);
 
@@ -55,22 +60,24 @@ app.post("/register", function(req, res){
 
 
 app.post("/login", function(req, res){
-  const username = req.body.username;
-  const password = req.body.password;
-  User.findOne(
-    {mail: username},
-    function(err, findUser){
-      if (!err){
-        if (findUser) {
-          if (findUser.password===password) {
-            res.render("Secrets");
-          } else {
-            res.send("Usuario o Password erroneo");
-          }
+  var username = req.body.username;
+  var password = req.body.password;
+
+  User.findOne({email: username}, function(err, findUser){
+    if (err) {
+      console.log(err);
+    } else {
+      if (findUser) {
+        if (findUser.password===password) {
+          res.render("secrets");
+        } else {
+          console.log("Password Incorrecto");
         }
+      } else {
+        console.log("Usuario no encontrado");
       }
     }
-  )
+  })
 });
 
 //Arrancar Servidor
